@@ -1,0 +1,40 @@
+﻿@model Category
+
+<form method="post">
+    <input asp-for="Id" hidden />
+    <div class="container">
+
+        <div class="mt-4 mb-3">
+            <div asp-validation-summary="ModelOnly"></div>
+            <h2 class="text-primary">
+                Delete Category
+            </h2>
+        </div>
+        <div class="pt-2 pb-2 row">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" disabled class="form-control " />
+            <span asp-validation-for="Name"></span>
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="DisplayOrder"></label>
+            <input asp-for="DisplayOrder" disabled class="form-control" />
+            <span asp-validation-for="DisplayOrder"></span>
+        </div>
+        <div class="row p-2 ">
+            <div class="col-6 col-md-3">
+                <button type="submit" class="btn btn-danger form-control">
+                    Delete
+                </button>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-controller="Category" asp-action="Index" class=" btn btn-outline-secondary border form-control">
+                    Back
+                </a>
+            </div>
+        </div>
+        @*Direct way to add partial scripts f they are smal or view releated (not script releated)*@
+        @* <partial name="_ValidationScriptsPartial" /> *@
+    </div>
+</form>
+
+

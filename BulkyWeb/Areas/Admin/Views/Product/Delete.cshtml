@@ -1,0 +1,65 @@
+﻿@model Product
+<div class="container-fluid my-5">
+<form method="post">
+    <input asp-for="Id" hidden />
+    <div class="container">
+
+        <div class="mt-4 mb-3">
+            <div asp-validation-summary="ModelOnly"></div>
+            <h2 class="text-primary">
+                Delete Product
+            </h2>
+        </div>
+        <div class="mt-4">
+            <div asp-validation-summary="ModelOnly"></div>
+        </div>
+        <div class="pt-2 pb-2 row">
+            <label asp-for="Title"></label>
+            <input asp-for="Title" disabled class="form-control" />
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="Author"></label>
+            <input asp-for="Author" disabled class="form-control" />
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="Description"></label>
+            <textarea asp-for="Description" disabled class="form-control" ></textarea>
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="ISBN"></label>
+            <input asp-for="ISBN" disabled class="form-control" />
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="ListPrice"></label>
+            <input asp-for="ListPrice" disabled class="form-control" />
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="Price"></label>
+            <input asp-for="Price" disabled class="form-control" />
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="Price50"></label>
+            <input asp-for="Price50" disabled class="form-control" />
+        </div>
+        <div class="row pt-2 pb-2">
+            <label asp-for="Price100"></label>
+            <input asp-for="Price100" disabled class="form-control" />
+        </div>
+        <div class="row p-2 ">
+            <div class="col-6 col-md-3">
+                <button type="submit" class="btn btn-danger form-control">
+                    Delete
+                </button>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-controller="Product" asp-action="Index" class=" btn btn-outline-secondary border form-control">
+                    Back
+                </a>
+            </div>
+        </div>
+        @*Direct way to add partial scripts f they are smal or view releated (not script releated)*@
+        @* <partial name="_ValidationScriptsPartial" /> *@
+    </div>
+</form>
+</div>
+
