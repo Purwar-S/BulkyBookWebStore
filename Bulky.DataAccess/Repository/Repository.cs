@@ -13,16 +13,42 @@ namespace BulkyBook.DataAccess.Repository
             _db = db;
             dbset = db.Set<T>();
             //_db.Categories = dbset;
-        }
-        public IEnumerable<T> GetAll()
-        {
-            return dbset.ToList();
+            _db.Products.Include(u => u.Category);
         }
 
-        public T GetValue(Expression<Func<T, bool>> filter)
+        //Category
+        public IEnumerable<T> GetAll(string? includeProperties = null)
         {
-            var entity = dbset.Where(filter).FirstOrDefault();
-            return entity;
+            IQueryable<T> query = dbset;
+            if(!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach(var includeProp in includeProperties.Split(new char[] {','},StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProp);
+
+                }
+            }
+            return query.ToList();
+        }
+
+        public T GetValue(Expression<Func<T, bool>> filter, string? includeProperties = null)
+        {
+            //var entity = dbset.Where(filter).FirstOrDefault();
+            //return entity;
+
+            IQueryable<T> query = dbset;
+            query = query.Where(filter);
+            if (!string.IsNullOrEmpty(includeProperties))
+            {
+                foreach (var includeProp in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProp);
+
+                }
+            }
+
+            return query.FirstOrDefault();
+
         }
 
         public void Add(T entity)

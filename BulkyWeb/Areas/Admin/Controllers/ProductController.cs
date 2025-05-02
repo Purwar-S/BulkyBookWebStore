@@ -14,87 +14,140 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public ProductController(IUnitOfWork unitofwork)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        public ProductController(IUnitOfWork unitofwork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitofwork;
+            _webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Index()
         {
-            IEnumerable<Product> productList = _unitOfWork.Product.GetAll().ToList();
+            IEnumerable<Product> productList = _unitOfWork.Product.GetAll(includeProperties:"Category").ToList();
             return View(productList);
         }
-        public IActionResult Create()
+        public IActionResult Upsert(int? id)
         {
             //projections in EF core (picking only some clos not all directly)
-            IEnumerable<SelectListItem> categoryList = _unitOfWork.Category.GetAll()
+            ProductVM product_VM_Obj = new()
+            {
+                CategoryList = _unitOfWork.Category.GetAll()
                 .Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
-                });
-            //using ViewData to pass data from controller to view (not vice-versa)
-            //ViewData needs explicit casting in views
-            //ViewData["CategoriesList"] = categoryList;
-            ProductVM product_VM_Obj = new() 
-            {
-                Product = new Product(),
-                CategoryList = categoryList
+                }),
+                Product = new Product()
             };
-            return View(product_VM_Obj);
-        }
-        [HttpPost]
-        public IActionResult Create(Product model)
-        {
-            // --- custom validations
-            //if (model.Name == model.DisplayOrder.ToString())
-            //{
-            //    ModelState.AddModelError("", "Name and Display Order annnot be same");
-            //}
 
-            // --- server side validation
+            //insert or create
+            if (id ==0 || id == null) //insert
+            {
+                
+                return View(product_VM_Obj);
+            }
+            else
+            //update
+            {
+                product_VM_Obj.Product = _unitOfWork.Product.GetValue(u => u.Id == id);
+                return View(product_VM_Obj);
+            }
+        }
+
+        [HttpPost]
+        public IActionResult Upsert(ProductVM productVM, IFormFile? file)
+        {
+                        
             if (ModelState.IsValid)
             {
-                _unitOfWork.Product.Add(model);
-                _unitOfWork.Save();
-                TempData["success"] = "Product Added Successfully";
+                string path = _webHostEnvironment.WebRootPath;
+                if(file != null)
+                {
+                    string filename = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    string productImgPath = Path.Combine(path, @"images\products");
+
+                    if(!string.IsNullOrEmpty(productVM.Product.ImageUrl))
+                    {
+                        //Delete the old image and then add new one 
+                        string oldImgPath = Path.Combine(path, productVM.Product.ImageUrl.Trim('\\'));
+                        if(System.IO.File.Exists(oldImgPath)) 
+                        {
+                            System.IO.File.Delete(oldImgPath);
+                        }
+                    }
+
+                    //saving to product image to file path above
+                    using(var filestream = new FileStream(Path.Combine(productImgPath,filename),FileMode.Create))
+                    {
+                        file.CopyTo(filestream);
+                    }
+                    productVM.Product.ImageUrl = @"\images\products\" + filename;
+                }
+
+                if(productVM.Product.Id != 0)//no Id for object means Create new one
+                {
+                    _unitOfWork.Product.Update(productVM.Product);
+                    _unitOfWork.Save();
+                    TempData["success"] = "Product Updated Successfully";
+                }
+                else
+                {
+                    _unitOfWork.Product.Add(productVM.Product);
+                    _unitOfWork.Save();
+                    TempData["success"] = "Product Added Successfully";
+                }
                 return RedirectToAction("Index", "Product");
             }
-            return View();
-        }
-        public IActionResult Edit(int? Id)
-        {
-            if (Id == null || Id == 0)
+            else
             {
-                return NotFound();
-            }
-            Product editProduct = _unitOfWork.Product.GetValue(u => u.Id == Id);
-            //Category editCategory1 = _db.Categories.FirstOrDefault(u => u.Id == Id);
-            //Category editCategory1 = _db.Categories.Where(u => u.Id == Id).FirstOrDefault();
-
-            if (editProduct == null)
-            {
-                return NotFound();
-            }
-            //projections in EF core (picking only some clos not all directly)
-            IEnumerable<SelectListItem> categoryList = _unitOfWork.Category.GetAll()
-                .Select(u => new SelectListItem
+                productVM.CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Id.ToString()
                 });
-            //using ViewBag -method to transfer data from controller to view
-            //ViewBag do not need explicit casting unlike ViewData
-            ViewBag.CategoriesList = categoryList;
-            return View(editProduct);
+                //ProductVM viewmodel = new()
+                //{
+                //    CategoryList = _unitOfWork.Category.GetAll().Select(u => new SelectListItem{
+                //                                                                                    Text = u.Name,
+                //                                                                                    Value = u.Id.ToString()}),
+                //    Product = new Product()
+                //};
+                return View(productVM);
+            }
         }
-        [HttpPost]
-        public IActionResult Edit(Product item)
-        {
-            _unitOfWork.Product.Update(item);
-            _unitOfWork.Save();
-            TempData["success"] = "Product Updated Successfully";
-            return RedirectToAction("Index");
-        }
+        //public IActionResult Edit(int? Id)
+        //{
+        //    if (Id == null || Id == 0)
+        //    {
+        //        return NotFound();
+        //    }
+        //    Product editProduct = _unitOfWork.Product.GetValue(u => u.Id == Id);
+        //    //Category editCategory1 = _db.Categories.FirstOrDefault(u => u.Id == Id);
+        //    //Category editCategory1 = _db.Categories.Where(u => u.Id == Id).FirstOrDefault();
+
+        //    if (editProduct == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    //projections in EF core (picking only some clos not all directly)
+        //    IEnumerable<SelectListItem> categoryList = _unitOfWork.Category.GetAll()
+        //        .Select(u => new SelectListItem
+        //        {
+        //            Text = u.Name,
+        //            Value = u.Id.ToString()
+        //        });
+        //    //using ViewBag -method to transfer data from controller to view
+        //    //ViewBag do not need explicit casting unlike ViewData
+        //    ViewBag.CategoriesList = categoryList;
+        //    return View(editProduct);
+        //}
+        //[HttpPost]
+        //public IActionResult Edit(Product item)
+        //{
+        //    _unitOfWork.Product.Update(item);
+        //    _unitOfWork.Save();
+        //    TempData["success"] = "Product Updated Successfully";
+        //    return RedirectToAction("Index");
+        //}
 
         public IActionResult Delete(int? Id)
         {
@@ -110,6 +163,7 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
             }
             return View(deleteItem);
         }
+
         [HttpPost, ActionName("Delete")]
         public IActionResult DeletePOST(int? Id)
         {

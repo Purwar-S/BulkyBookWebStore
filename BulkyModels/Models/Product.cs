@@ -22,7 +22,7 @@ namespace BulkyBook.Models.Models
         [Required]
         public string? Author{ get; set; }
         
-        [Required, NotNull]
+        [Required]
         public string Description { get; set; }
         
         [Required]
@@ -39,11 +39,11 @@ namespace BulkyBook.Models.Models
 
         [Required, Display(Name = "Price for 100+")]
         public double Price100 { get; set; }
-        [Display(Name ="Category Id")]
+        
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         [ValidateNever]
-        public Category Cat_Id { get; set; }
+        public Category Category { get; set; }
         [ValidateNever]
         public string ImageUrl { get; set; }
 
